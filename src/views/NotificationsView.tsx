@@ -23,7 +23,7 @@ export function NotificationsView() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto pb-24 bg-surface scrollbar-hide flex flex-col">
+    <div className="flex-1 overflow-y-auto pb-8 bg-surface scrollbar-hide flex flex-col">
       <div className="px-4 pt-6 pb-4 flex items-center gap-2 bg-surface sticky top-0 z-20">
         <button
           onClick={() => navigate("/")}
