@@ -41,7 +41,7 @@ export function HomeView() {
   }, [account?.id]);
 
   return (
-    <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
+    <div className="flex-1 overflow-y-auto pb-8 scrollbar-hide">
       {/* Header */}
       <div className="px-6 pt-6 pb-4 flex justify-between items-center bg-surface sticky top-0 z-20">
         <div className="flex items-center gap-3">
