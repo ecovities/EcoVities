@@ -18,7 +18,7 @@ export function ProfileView() {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto pb-28 bg-surface scrollbar-hide flex flex-col">
+    <div className="flex-1 overflow-y-auto pb-8 bg-surface scrollbar-hide flex flex-col">
       <div className="px-6 pt-10 pb-6 flex flex-col items-center bg-surface">
         <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-sm mb-3">
           <Avatar seed={account?.full_name ?? "User"} size={80} />
