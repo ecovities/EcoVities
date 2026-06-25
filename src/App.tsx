@@ -1,7 +1,6 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppShell } from "./components/AppShell";
-import { BottomNav } from "./components/BottomNav";
 import { LoginView } from "./views/LoginView";
 import { HomeView } from "./views/HomeView";
 import { ContactsView } from "./views/ContactsView";
@@ -12,29 +11,19 @@ import { HistoryView } from "./views/HistoryView";
 import { ProfileView } from "./views/ProfileView";
 import { NotificationsView } from "./views/NotificationsView";
 
-// Routes that render full-screen, without the bottom nav.
-const NO_NAV_ROUTES = ["/contacts", "/scan", "/receive", "/notifications"];
-const isPayRoute = (path: string) => path.startsWith("/pay/");
-
 function AuthedApp() {
-  const location = useLocation();
-  const showNav = !NO_NAV_ROUTES.includes(location.pathname) && !isPayRoute(location.pathname);
-
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<HomeView />} />
-        <Route path="/contacts" element={<ContactsView />} />
-        <Route path="/pay/:ecoId" element={<PayView />} />
-        <Route path="/receive" element={<ReceiveView />} />
-        <Route path="/scan" element={<ScanView />} />
-        <Route path="/history" element={<HistoryView />} />
-        <Route path="/profile" element={<ProfileView />} />
-        <Route path="/notifications" element={<NotificationsView />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      {showNav && <BottomNav />}
-    </>
+    <Routes>
+      <Route path="/" element={<HomeView />} />
+      <Route path="/contacts" element={<ContactsView />} />
+      <Route path="/pay/:ecoId" element={<PayView />} />
+      <Route path="/receive" element={<ReceiveView />} />
+      <Route path="/scan" element={<ScanView />} />
+      <Route path="/history" element={<HistoryView />} />
+      <Route path="/profile" element={<ProfileView />} />
+      <Route path="/notifications" element={<NotificationsView />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
@@ -60,7 +49,6 @@ function AccountPendingNotice() {
 
 function Root() {
   const { session, account, loading } = useAuth();
-
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -68,10 +56,8 @@ function Root() {
       </div>
     );
   }
-
   if (!session) return <LoginView />;
   if (!account || account.status !== "approved") return <AccountPendingNotice />;
-
   return <AuthedApp />;
 }
 
