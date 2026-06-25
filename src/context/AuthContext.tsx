@@ -18,6 +18,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
+  // Start as true — stay true until BOTH session AND account are resolved.
+  // This prevents the "Waiting for approval" flash while getMyAccount() is in flight.
   const [loading, setLoading] = useState(true);
 
   async function refreshAccount() {
@@ -28,13 +30,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      if (session) await refreshAccount();
+      if (session) {
+        // Wait for account to fully load before clearing loading state.
+        // This ensures Root() never sees session=true + account=null transiently.
+        await refreshAccount();
+      }
       setLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      if (session) { await refreshAccount(); } else { setAccount(null); }
-    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        if (session) {
+          await refreshAccount();
+        } else {
+          setAccount(null);
+        }
+      },
+    );
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -49,7 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, account, loading, signIn, signOut, refreshAccount }}>
+    <AuthContext.Provider
+      value={{ session, account, loading, signIn, signOut, refreshAccount }}
+    >
       {children}
     </AuthContext.Provider>
   );
