@@ -54,11 +54,21 @@ input[type=number]::-webkit-outer-spin-button {
   animation: scan 2s linear infinite;
 }
 
-button:focus-visible,
-input:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+/* Kill ALL browser focus outlines and rings — mobile app, not a website */
+*:focus,
+*:focus-visible,
+*:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: inherit !important;
+  ring: 0 !important;
 }
 
 .nav-item {
