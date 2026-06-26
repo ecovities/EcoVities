@@ -1,56 +1,58 @@
-import { useAuth } from "../context/AuthContext";
-import { Avatar } from "../components/Avatar";
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { supabase } from '../lib/supabaseClient';
 
 export function ProfileView() {
-  const { account, signOut } = useAuth();
+  const { account } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const [uploading, setUploading] = useState(false);
 
-  const rows = [
-    { icon: "badge", label: "EcoID", value: account?.eco_id },
-    { icon: "mail", label: "Email", value: account?.email },
-    {
-      icon: account?.account_type === "business" ? "storefront" : "school",
-      label: account?.account_type === "business" ? "Account type" : "Institution",
-      value:
-        account?.account_type === "business"
-          ? `Business · ${account?.category ?? "General"}`
-          : "Your institution",
-    },
-  ];
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'ecovities_avatars'); // From your Cloudinary setup
+
+    try {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/dctc2vtcc/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      
+      // Update profile in Supabase
+      await supabase.from('accounts').update({ avatar_url: data.secure_url }).eq('id', account?.id);
+      window.location.reload(); 
+    } catch (err) {
+      console.error("Upload failed", err);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
-    <div className="flex-1 overflow-y-auto pb-8 bg-surface scrollbar-hide flex flex-col">
-      <div className="px-6 pt-10 pb-6 flex flex-col items-center bg-surface">
-        <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-sm mb-3">
-          <Avatar seed={account?.full_name ?? "User"} size={80} />
+    <div className="p-6 bg-surface dark:bg-gray-900 min-h-screen transition-colors">
+      <h1 className="text-2xl font-bold mb-6 dark:text-white">Settings</h1>
+      
+      {/* Profile Image */}
+      <div className="flex items-center gap-4 mb-8">
+        <img src={account?.avatar_url || '/default-avatar.png'} className="w-20 h-20 rounded-full" />
+        <input type="file" onChange={handleImageUpload} disabled={uploading} className="text-sm" />
+      </div>
+
+      {/* Settings List */}
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-4 shadow-sm">
+        <div className="flex justify-between items-center py-4 border-b dark:border-gray-700">
+          <span className="dark:text-white">App Theme</span>
+          <button onClick={toggleTheme} className="px-4 py-1 bg-primary text-white rounded-full text-sm">
+            {isDark ? 'Light' : 'Dark'}
+          </button>
         </div>
-        <h1 className="text-xl font-semibold text-gray-900">{account?.full_name}</h1>
-        <p className="text-gray-500 text-[14px]">
-          {account?.account_type === "business" ? "Business Account" : "Student"}
-        </p>
-      </div>
-
-      <div className="px-6 mt-2 space-y-2">
-        {rows.map((row) => (
-          <div
-            key={row.label}
-            className="flex items-center gap-4 bg-surface-container rounded-2xl p-4"
-          >
-            <span className="material-symbols-rounded text-gray-600">{row.icon}</span>
-            <div>
-              <p className="text-[12px] text-gray-500">{row.label}</p>
-              <p className="text-[15px] font-medium text-gray-900">{row.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="px-6 mt-6">
-        <button
-          onClick={signOut}
-          className="w-full bg-surface-container-high text-gray-900 py-3.5 rounded-full text-[15px] font-medium hover:bg-gray-300 transition active:scale-95"
-        >
-          Sign Out
-        </button>
+        {/* Add more options here... */}
       </div>
     </div>
   );
