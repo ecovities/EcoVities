@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../lib/supabaseClient';
 
 export function ProfileView() {
+  const navigate = useNavigate();
   const { account, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   
@@ -52,10 +54,19 @@ export function ProfileView() {
   };
 
   return (
-    <div className="p-6 pb-8 min-h-screen bg-surface text-on-surface transition-colors duration-300">
-      {/* View Header Bar */}
+    <div className="p-6 pb-8 min-h-screen bg-surface dark:bg-black text-on-surface dark:text-gray-100 transition-colors duration-300">
+      {/* View Header Bar with Navigation Back Arrow */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Profile</h1>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate('/')} 
+            className="flex items-center justify-center p-1.5 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors active:scale-95"
+            aria-label="Go back"
+          >
+            <span className="material-symbols-rounded text-2xl">arrow_back</span>
+          </button>
+          <h1 className="text-2xl font-bold">Profile</h1>
+        </div>
         <button 
           onClick={() => isEditing ? handleUpdate() : setIsEditing(true)} 
           className="text-primary font-semibold text-sm tracking-wide transition-opacity hover:opacity-80"
@@ -67,7 +78,7 @@ export function ProfileView() {
       {/* Picture & Info Segment */}
       <div className="flex flex-col items-center mb-8">
         <label className="relative cursor-pointer select-none">
-          <div className="w-24 h-24 rounded-full bg-surface-container flex items-center justify-center overflow-hidden border-4 border-surface-container-high shadow-sm transition-all">
+          <div className="w-24 h-24 rounded-full bg-surface-container dark:bg-gray-900 flex items-center justify-center overflow-hidden border-4 border-surface-container-high dark:border-gray-800 shadow-sm transition-all">
             {uploading ? (
               <span className="material-symbols-rounded text-3xl text-primary animate-spin">progress_activity</span>
             ) : (account as any)?.avatar_url ? (
@@ -89,33 +100,33 @@ export function ProfileView() {
           <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
         </label>
         <p className="mt-4 font-semibold text-lg">{account?.full_name}</p>
-        <p className="text-sm text-gray-500 mt-0.5 font-medium">{account?.eco_id}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 font-medium">{account?.eco_id}</p>
       </div>
 
       {/* Database Schema Forms */}
-      <div className="bg-white dark:bg-surface-container rounded-3xl p-5 shadow-sm border border-surface-container-high mb-8 transition-colors duration-300">
+      <div className="bg-white dark:bg-surface-container rounded-3xl p-5 shadow-sm border border-surface-container-high dark:border-gray-800 mb-8 transition-colors duration-300">
         <div className="space-y-5">
           <div>
-            <label className="text-xs font-semibold text-gray-400 tracking-wider block mb-1">FULL NAME</label>
+            <label className="text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-wider block mb-1">FULL NAME</label>
             {isEditing ? (
               <input 
                 type="text"
                 value={formData.full_name} 
                 onChange={e => setFormData({...formData, full_name: e.target.value})} 
-                className="w-full bg-transparent border-b border-surface-container-highest py-1 focus:border-primary transition-colors" 
+                className="w-full bg-transparent border-b border-surface-container-highest dark:border-gray-700 py-1 focus:border-primary transition-colors" 
               />
             ) : (
               <p className="font-medium">{account?.full_name}</p>
             )}
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-400 tracking-wider block mb-1">PHONE NUMBER</label>
+            <label className="text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-wider block mb-1">PHONE NUMBER</label>
             {isEditing ? (
               <input 
                 type="tel"
                 value={formData.phone} 
                 onChange={e => setFormData({...formData, phone: e.target.value})} 
-                className="w-full bg-transparent border-b border-surface-container-highest py-1 focus:border-primary transition-colors" 
+                className="w-full bg-transparent border-b border-surface-container-highest dark:border-gray-700 py-1 focus:border-primary transition-colors" 
               />
             ) : (
               <p className="font-medium">{account?.phone || 'Not provided'}</p>
@@ -125,18 +136,18 @@ export function ProfileView() {
       </div>
 
       {/* Material Menu Block List */}
-      <h2 className="text-xs font-bold text-gray-400 mb-3 px-2 tracking-widest">SETTINGS</h2>
-      <div className="bg-white dark:bg-surface-container rounded-3xl shadow-sm border border-surface-container-high divide-y divide-surface-container-high overflow-hidden transition-colors duration-300">
+      <h2 className="text-xs font-bold text-gray-400 dark:text-gray-500 mb-3 px-2 tracking-widest">SETTINGS</h2>
+      <div className="bg-white dark:bg-surface-container rounded-3xl shadow-sm border border-surface-container-high dark:border-gray-800 divide-y divide-surface-container-high dark:divide-gray-800 overflow-hidden transition-colors duration-300">
         <SettingItem icon="shield" label="Security & Privacy" />
         <SettingItem icon="notifications" label="Notifications" />
         
         {/* Native Interactive Toggle Pattern */}
         <div 
           onClick={toggleTheme} 
-          className="flex justify-between items-center p-4 hover:bg-surface-container-high/30 cursor-pointer transition-all active:scale-[0.99]"
+          className="flex justify-between items-center p-4 hover:bg-surface-container-high/30 dark:hover:bg-gray-800/30 cursor-pointer transition-all active:scale-[0.99]"
         >
           <div className="flex items-center gap-3.5">
-            <span className="material-symbols-rounded text-[22px] text-gray-400">
+            <span className="material-symbols-rounded text-[22px] text-gray-400 dark:text-gray-500">
               {isDark ? 'dark_mode' : 'light_mode'}
             </span>
             <span className="font-medium text-[15px]">App Theme</span>
@@ -149,10 +160,10 @@ export function ProfileView() {
         <SettingItem icon="help" label="Help & Support" />
       </div>
 
-      {/* Primary Destructive Sign-Out Endpoint */}
+      {/* Premium Adaptive Sign-Out Endpoint */}
       <button 
         onClick={signOut} 
-        className="w-full mt-8 py-4 bg-red-50 dark:bg-red-950/20 text-error hover:bg-red-100/60 font-semibold rounded-2xl text-[15px] tracking-wide transition-all active:scale-[0.99]"
+        className="w-full mt-8 py-3.5 bg-red-50 dark:bg-red-950/20 text-error hover:bg-red-100/60 dark:hover:bg-red-900/30 font-semibold rounded-2xl text-[15px] tracking-wide transition-all active:scale-[0.99] border border-red-100 dark:border-red-900/40"
       >
         Sign Out
       </button>
@@ -162,12 +173,12 @@ export function ProfileView() {
 
 function SettingItem({ icon, label }: { icon: string; label: string }) {
   return (
-    <div className="flex justify-between items-center p-4 hover:bg-surface-container-high/30 cursor-pointer transition-all active:scale-[0.99]">
+    <div className="flex justify-between items-center p-4 hover:bg-surface-container-high/30 dark:hover:bg-gray-800/30 cursor-pointer transition-all active:scale-[0.99]">
       <div className="flex items-center gap-3.5">
-        <span className="material-symbols-rounded text-[22px] text-gray-400">{icon}</span>
+        <span className="material-symbols-rounded text-[22px] text-gray-400 dark:text-gray-500">{icon}</span>
         <span className="font-medium text-[15px]">{label}</span>
       </div>
-      <span className="material-symbols-rounded text-gray-400 text-[20px]">chevron_right</span>
+      <span className="material-symbols-rounded text-gray-400 dark:text-gray-600 text-[20px]">chevron_right</span>
     </div>
   );
 }
