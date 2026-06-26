@@ -15,6 +15,12 @@
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
   --color-on-error-container: #410002;
+  
+  /* Dark mode overrides */
+  --color-dark-surface: #121212;
+  --color-dark-on-surface: #e2e2e0;
+  --color-dark-surface-container: #1e1e1e;
+  
   --font-sans: 'Outfit', sans-serif;
 }
 
@@ -22,15 +28,25 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Base Dark Mode Logic */
+.dark {
+  color-scheme: dark;
+}
+
 body {
   font-family: 'Outfit', sans-serif;
   background-color: #e0e0e0;
+}
+
+.dark body {
+  background-color: #000000;
 }
 
 .material-symbols-rounded {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   font-family: 'Material Symbols Rounded';
 }
+
 .icon-filled {
   font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
@@ -54,13 +70,14 @@ input[type=number]::-webkit-outer-spin-button {
   animation: scan 2s linear infinite;
 }
 
-/* Kill ALL browser focus outlines and rings — mobile app, not a website */
+/* Kill ALL browser focus outlines and rings */
 *:focus,
 *:focus-visible,
 *:focus-within {
   outline: none !important;
   box-shadow: none !important;
 }
+
 input:focus,
 textarea:focus,
 select:focus,
@@ -71,36 +88,10 @@ button:focus {
   ring: 0 !important;
 }
 
-.nav-item {
-  position: relative;
-  color: #6b7280;
-  min-width: 64px;
-  transition: color 0.15s;
-}
-.nav-item.active {
-  color: #146c2e;
-}
-.nav-indicator {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: transparent;
-  transition: background 0.2s;
-}
-.nav-item.active .nav-indicator {
-  background: #c8f0ce;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-@layer base {
-  .dark {
-    color-scheme: dark;
   }
 }
