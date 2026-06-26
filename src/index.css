@@ -98,3 +98,9 @@ button:focus {
     transition-duration: 0.01ms !important;
   }
 }
+
+@layer base {
+  .dark {
+    color-scheme: dark;
+  }
+}
