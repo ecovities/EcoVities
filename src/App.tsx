@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { AppShell } from "./components/AppShell";
 import { LoginView } from "./views/LoginView";
 import { HomeView } from "./views/HomeView";
@@ -32,14 +33,14 @@ function AccountPendingNotice() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-4">
       <span className="material-symbols-rounded text-5xl text-gray-400">hourglass_top</span>
-      <h2 className="text-lg font-medium text-gray-900">Waiting for approval</h2>
-      <p className="text-sm text-gray-500">
+      <h2 className="text-lg font-medium text-gray-900 dark:text-white">Waiting for approval</h2>
+      <p className="text-sm text-gray-500 dark:text-gray-400">
         Your institution needs to approve your account before your wallet is created
         {account?.status === "suspended" ? " — this account is currently suspended." : "."}
       </p>
       <button
         onClick={signOut}
-        className="mt-2 bg-surface-container-high text-gray-900 px-5 py-2.5 rounded-full text-sm font-medium"
+        className="mt-2 bg-surface-container-high dark:bg-gray-700 text-gray-900 dark:text-white px-5 py-2.5 rounded-full text-sm font-medium"
       >
         Sign out
       </button>
@@ -63,10 +64,12 @@ function Root() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppShell>
-        <Root />
-      </AppShell>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppShell>
+          <Root />
+        </AppShell>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
