@@ -1,10 +1,14 @@
-import type { ReactNode } from "react";
+import { useTheme } from '../context/ThemeContext';
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const { isDark } = useTheme();
+  
   return (
-    <div className="flex justify-center min-h-screen bg-[#e0e0e0]">
-      <div className="w-full max-w-md bg-surface shadow-2xl h-[100dvh] relative overflow-hidden flex flex-col">
-        {children}
+    <div className={isDark ? 'dark' : ''}>
+      <div className="min-h-screen bg-surface dark:bg-black text-on-surface dark:text-gray-100 transition-colors duration-300">
+        <main className="max-w-md mx-auto min-h-screen flex flex-col">
+          {children}
+        </main>
       </div>
     </div>
   );
