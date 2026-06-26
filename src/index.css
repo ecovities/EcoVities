@@ -4,46 +4,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0');
 
 @theme {
+  --font-sans: 'Outfit', sans-serif;
+  
+  /* Brand Core Colors */
   --color-primary: #146c2e;
   --color-on-primary: #ffffff;
   --color-primary-container: #c8f0ce;
   --color-on-primary-container: #00210a;
-  --color-surface: #fbfdf7;
-  --color-surface-container: #f0f4ee;
-  --color-surface-container-high: #e2e8e0;
-  --color-surface-container-highest: #dce2d9;
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
   --color-on-error-container: #410002;
-  
-  /* Dark mode variants mapped for seamless theme toggles */
-  --color-dark-surface: #121212;
-  --color-dark-on-surface: #e2e2e0;
-  --color-dark-surface-container: #1e1e1e;
-  
-  --font-sans: 'Outfit', sans-serif;
+
+  /* Default Light Mode Semantic Surfaces */
+  --color-surface: #fbfdf7;
+  --color-on-surface: #1c1c1b;
+  --color-surface-container: #f0f4ee;
+  --color-surface-container-high: #e2e8e0;
+  --color-surface-container-highest: #dce2d9;
+}
+
+/* System-Wide Dark Mode Token Overrides */
+.dark {
+  --color-surface: #121212;
+  --color-on-surface: #e2e2e0;
+  --color-surface-container: #1e1e1e;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #333333;
+  color-scheme: dark;
 }
 
 :root {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* System-wide Color System Transitions */
+/* Smooth Background & Text Color Transitions */
 body {
   font-family: 'Outfit', sans-serif;
   background-color: #e0e0e0;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  @apply text-on-surface transition-colors duration-300 ease-in-out;
 }
 
 .dark body {
   background-color: #000000;
 }
 
-.dark {
-  color-scheme: dark;
-}
-
-/* Material Design Icon System Configuration */
+/* Icons & Structural Layout Helpers */
 .material-symbols-rounded {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   font-family: 'Material Symbols Rounded';
@@ -53,13 +58,12 @@ body {
   font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-/* Mobile-First Layout Utility Wrappers */
-.scrollbar-hide::-webkit-scrollbar { 
-  display: none; 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
-.scrollbar-hide { 
-  -ms-overflow-style: none; 
-  scrollbar-width: none; 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 input[type=number]::-webkit-inner-spin-button,
@@ -68,7 +72,7 @@ input[type=number]::-webkit-outer-spin-button {
   margin: 0;
 }
 
-/* QR Scanner Animation Sequence */
+/* QR Code Scanner Overlay Line Animation */
 @keyframes scan {
   0% { top: 0%; opacity: 0; }
   10% { opacity: 1; }
@@ -79,7 +83,7 @@ input[type=number]::-webkit-outer-spin-button {
   animation: scan 2s linear infinite;
 }
 
-/* Strict Clean Focus-Kill Rules (Native Native App Experience) */
+/* Native Mobile App Touch Form Resets */
 *:focus,
 *:focus-visible,
 *:focus-within {
@@ -97,7 +101,6 @@ button:focus {
   ring: 0 !important;
 }
 
-/* Performance Optimizations for Lower End Devices */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
