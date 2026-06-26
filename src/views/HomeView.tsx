@@ -1,197 +1,154 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { getContacts, getMyTransactions } from "../lib/api";
-import { useWallet } from "../hooks/useWallet";
-import { useNotifications } from "../hooks/useNotifications";
-import { Avatar, InitialAvatar } from "../components/Avatar";
-import type { ContactSummary, TransactionWithDirection } from "../types";
-
-const BUSINESS_ICONS: Record<string, string> = {
-  cafeteria: "storefront",
-  stationery: "edit",
-  club: "groups",
-  library: "menu_book",
-  transit: "directions_bus",
-};
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useWallet } from '../hooks/useWallet';
+import { useNotifications } from '../hooks/useNotifications';
+import { supabase } from '../lib/supabaseClient';
 
 export function HomeView() {
   const { account } = useAuth();
-  const navigate = useNavigate();
-  const { balance, loading: walletLoading } = useWallet();
+  const { balance } = useWallet();
   const { unreadCount } = useNotifications();
-  const [contacts, setContacts] = useState<ContactSummary[]>([]);
-  const [recent, setRecent] = useState<TransactionWithDirection[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<any[]>([]);
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const [contactList, txs] = await Promise.all([
-        getContacts(),
-        getMyTransactions(3),
-      ]);
-      if (cancelled) return;
-      setContacts(contactList.filter((c) => c.id !== account?.id).slice(0, 6));
-      setRecent(txs);
-      setDataLoading(false);
+    async function loadDashboardData() {
+      if (!account) return;
+      
+      // Fetch recent transactions
+      const { data: txs } = await supabase
+        .from('transactions')
+        .select(`*, from_wallet:from_wallet_id(owner_account_id), to_wallet:to_wallet_id(owner_account_id)`)
+        .order('created_at', { ascending: false })
+        .limit(3);
+        
+      if (txs) setRecentTransactions(txs);
+
+      // Fetch sample contacts (users in same institution)
+      const { data: users } = await supabase
+        .from('accounts')
+        .select('*')
+        .eq('institution_id', account.institution_id)
+        .neq('id', account.id)
+        .limit(5);
+        
+      if (users) setContacts(users);
     }
-    load();
-    return () => { cancelled = true; };
-  }, [account?.id]);
+    loadDashboardData();
+  }, [account]);
 
   return (
-    <div className="flex-1 overflow-y-auto pb-8 scrollbar-hide">
-      {/* Header */}
-      <div className="px-6 pt-6 pb-4 flex justify-between items-center bg-surface sticky top-0 z-20">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-            <span className="material-symbols-rounded text-xl icon-filled">eco</span>
-          </div>
-          <span className="text-xl font-bold text-gray-800 tracking-tight">EcoVities</span>
+    <div className="min-h-screen bg-surface dark:bg-black transition-colors duration-300 pb-8">
+      {/* App Header */}
+      <div className="flex items-center justify-between p-6">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-rounded text-primary text-[32px]">eco</span>
+          <h1 className="text-xl font-bold text-on-surface dark:text-white tracking-tight">EcoVities</h1>
         </div>
-        <div className="flex gap-4">
-          <button
-            onClick={() => navigate("/notifications")}
-            className="relative text-gray-600 hover:bg-gray-100 p-2 rounded-full transition"
-            aria-label="Notifications"
-          >
-            <span className="material-symbols-rounded">notifications</span>
+        <div className="flex items-center gap-5">
+          <Link to="/notifications" className="relative text-on-surface dark:text-gray-300 hover:text-primary transition-colors">
+            <span className="material-symbols-rounded text-[26px]">notifications</span>
             {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface" />
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-error rounded-full border-2 border-surface dark:border-black"></span>
             )}
-          </button>
-          <button
-            onClick={() => navigate("/profile")}
-            className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 shadow-sm hover:opacity-80 transition"
-            aria-label="Profile"
-          >
-            <Avatar seed={account?.full_name ?? "User"} size={36} />
-          </button>
+          </Link>
+          <Link to="/profile" className="active:scale-95 transition-transform">
+            <img 
+              src={(account as any)?.avatar_url || '/avatar-placeholder.png'} 
+              className="w-9 h-9 rounded-full border-2 border-surface-container-high dark:border-gray-700 object-cover" 
+              alt="Profile"
+              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+            />
+          </Link>
         </div>
       </div>
 
-      {/* Balance */}
-      <div className="px-6 py-6 text-center">
-        <p className="text-sm font-medium text-gray-600 mb-2">Available EcoPoints</p>
-        <h1 className="text-6xl font-semibold text-gray-900 tracking-tighter flex justify-center items-center gap-2">
-          <span className="text-3xl text-gray-400 font-medium mt-2">EP</span>
-          {walletLoading ? (
-            <span className="text-gray-300 animate-pulse">—</span>
-          ) : (
-            balance?.toLocaleString() ?? "0"
-          )}
-        </h1>
-        {account?.account_type === "business" && (
-          <span className="inline-block mt-2 text-[12px] font-medium bg-primary-container text-on-primary-container px-3 py-1 rounded-full">
-            Business Account
-          </span>
-        )}
+      {/* Balance Section */}
+      <div className="px-6 flex flex-col items-center mt-2 mb-10">
+        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 tracking-wide">Available EcoPoints</p>
+        <div className="flex items-baseline gap-1.5 text-on-surface dark:text-white">
+          <span className="text-2xl font-bold text-gray-400 dark:text-gray-500">EP</span>
+          <span className="text-6xl font-bold tracking-tighter">{balance ?? 0}</span>
+        </div>
       </div>
 
-      {/* Quick actions */}
-      <div className="px-6 py-4 grid grid-cols-3 gap-3">
-        <button
-          onClick={() => navigate("/scan")}
-          className="bg-primary text-white py-4 rounded-3xl flex flex-col items-center justify-center gap-2 hover:opacity-90 transition active:scale-95 shadow-md"
-        >
-          <span className="material-symbols-rounded">qr_code_scanner</span>
-          <span className="text-[13px] font-medium tracking-wide">Scan QR</span>
-        </button>
-        <button
-          onClick={() => navigate("/contacts")}
-          className="bg-surface-container-high text-gray-900 py-4 rounded-3xl flex flex-col items-center justify-center gap-2 hover:bg-surface-container-highest transition active:scale-95 shadow-sm"
-        >
-          <span className="material-symbols-rounded">arrow_upward</span>
-          <span className="text-[13px] font-medium tracking-wide">Send</span>
-        </button>
-        <button
-          onClick={() => navigate("/receive")}
-          className="bg-surface-container-high text-gray-900 py-4 rounded-3xl flex flex-col items-center justify-center gap-2 hover:bg-surface-container-highest transition active:scale-95 shadow-sm"
-        >
-          <span className="material-symbols-rounded">arrow_downward</span>
-          <span className="text-[13px] font-medium tracking-wide">Receive</span>
-        </button>
+      {/* Action Buttons */}
+      <div className="px-6 flex gap-3 mb-10">
+        <Link to="/scan" className="flex-1 bg-primary text-white rounded-3xl p-4 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95 shadow-sm">
+          <span className="material-symbols-rounded text-[28px]">qr_code_scanner</span>
+          <span className="text-sm font-semibold">Scan QR</span>
+        </Link>
+        <Link to="/contacts" className="flex-1 bg-surface-container-high dark:bg-gray-800 text-on-surface dark:text-gray-100 rounded-3xl p-4 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95 shadow-sm border border-transparent dark:border-gray-700">
+          <span className="material-symbols-rounded text-[28px]">arrow_upward</span>
+          <span className="text-sm font-semibold">Send</span>
+        </Link>
+        <Link to="/receive" className="flex-1 bg-surface-container-high dark:bg-gray-800 text-on-surface dark:text-gray-100 rounded-3xl p-4 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95 shadow-sm border border-transparent dark:border-gray-700">
+          <span className="material-symbols-rounded text-[28px]">arrow_downward</span>
+          <span className="text-sm font-semibold">Receive</span>
+        </Link>
       </div>
 
-      {/* Contacts strip */}
-      <div className="mt-4 px-6">
+      {/* People & Businesses */}
+      <div className="px-6 mb-10">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-base font-medium text-gray-900">People &amp; businesses</h2>
-          <button
-            onClick={() => navigate("/contacts")}
-            className="text-primary text-sm font-medium hover:opacity-80 transition"
-          >
-            See all
-          </button>
+          <h2 className="text-[17px] font-bold text-on-surface dark:text-white">People & businesses</h2>
+          <Link to="/contacts" className="text-sm font-bold text-primary">See all</Link>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {!dataLoading && contacts.length === 0 && (
-            <p className="text-sm text-gray-500">No contacts yet.</p>
-          )}
-          {contacts.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => navigate(`/pay/${c.eco_id}`)}
-              className="flex flex-col items-center min-w-[72px] cursor-pointer group"
-            >
-              <div className="group-hover:scale-105 transition">
-                <InitialAvatar
-                  name={c.full_name}
-                  isBusiness={c.account_type === "business"}
-                  icon={c.category ? (BUSINESS_ICONS[c.category] ?? "storefront") : undefined}
-                />
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+          {contacts.map((contact) => (
+            <div key={contact.id} onClick={() => navigate(`/pay/${contact.eco_id}`)} className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform min-w-[72px]">
+              <div className="w-14 h-14 rounded-full bg-primary-container dark:bg-gray-800 flex items-center justify-center text-primary-on-container dark:text-primary font-bold text-lg border border-transparent dark:border-gray-700 shadow-sm">
+                {contact.full_name.charAt(0)}
               </div>
-              <span className="text-[13px] text-gray-800 font-medium truncate w-full text-center mt-2">
-                {c.full_name.split(" ")[0]}
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate w-full text-center">
+                {contact.full_name.split(' ')[0]}
               </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent activity */}
-      <div className="mt-2 px-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-base font-medium text-gray-900">Recent activity</h2>
-          <button
-            onClick={() => navigate("/history")}
-            className="text-primary bg-primary-container px-4 py-1.5 rounded-full text-sm font-medium hover:opacity-80 transition"
-          >
-            View all
-          </button>
-        </div>
-
-        <div className="bg-surface-container rounded-3xl p-2 space-y-1">
-          {!dataLoading && recent.length === 0 && (
-            <p className="text-sm text-gray-500 p-3">No activity yet.</p>
-          )}
-          {recent.map((tx) => (
-            <div
-              key={tx.id}
-              className="flex items-center justify-between p-3 rounded-2xl hover:bg-surface-container-highest transition cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                <InitialAvatar name={tx.counterparty_name} size={48} />
-                <div>
-                  <p className="text-[15px] font-medium text-gray-900">{tx.counterparty_name}</p>
-                  <p className="text-[13px] text-gray-500">
-                    {new Date(tx.created_at).toLocaleString(undefined, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </p>
-                </div>
-              </div>
-              <div
-                className={`font-medium text-[15px] ${
-                  tx.direction === "in" ? "text-primary" : "text-gray-900"
-                }`}
-              >
-                {tx.direction === "in" ? "+" : "-"}{tx.amount}
-              </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="px-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-[17px] font-bold text-on-surface dark:text-white">Recent activity</h2>
+          <Link to="/history" className="bg-primary-container dark:bg-primary/20 text-on-primary-container dark:text-primary px-4 py-1.5 rounded-full text-sm font-bold">
+            View all
+          </Link>
+        </div>
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-2 shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+          {recentTransactions.length === 0 ? (
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">No recent transactions</div>
+          ) : (
+            recentTransactions.map((tx) => {
+              const isCredit = tx.to_wallet?.owner_account_id === account?.id;
+              return (
+                <div key={tx.id} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-primary-container dark:bg-gray-800 flex items-center justify-center text-primary font-bold shadow-sm">
+                      <span className="material-symbols-rounded text-[20px]">
+                        {isCredit ? 'arrow_downward' : 'arrow_upward'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-on-surface dark:text-white text-[15px]">
+                        {isCredit ? 'Received' : 'Sent'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {new Date(tx.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`font-bold text-[15px] ${isCredit ? 'text-primary' : 'text-on-surface dark:text-white'}`}>
+                    {isCredit ? '+' : '-'}{tx.amount}
+                  </span>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
